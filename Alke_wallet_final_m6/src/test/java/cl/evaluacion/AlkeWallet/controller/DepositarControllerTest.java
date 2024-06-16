@@ -1,122 +1,102 @@
 package cl.evaluacion.AlkeWallet.controller;
 
-import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
+
 import cl.evaluacion.AlkeWallet.entity.TipoAlerta;
 import cl.evaluacion.AlkeWallet.model.Usuario;
-
 import cl.evaluacion.AlkeWallet.service.TransaccionService;
 import cl.evaluacion.AlkeWallet.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = AlkeWalletApplication.class)
-@AutoConfigureMockMvc
+
 public class DepositarControllerTest {
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+	 @Mock
+	    private TransaccionService transaccionService;
 
-    @MockBean
-    private UsuarioService usuarioService;
+	    @Mock
+	    private UsuarioService usuarioService;
 
-    @MockBean
-    private TransaccionService transaccionService;
+	    @Mock
+	    private Authentication authentication;
 
-    private MockMvc mockMvc;
+	    @Mock
+	    private RedirectAttributes redirectAttributes;
 
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-    }
+	    @InjectMocks
+	    private DepositarController depositarController;
 
-    @Test
-    void testDepositoPostSuccess() throws Exception {
-        
-        Usuario usuario = new Usuario();
-        usuario.setCorreo("juanpablo@mail.com");
+	    @BeforeEach
+	    void setUp() {
+	        MockitoAnnotations.openMocks(this);
+	    }
 
-      
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext context = mock(SecurityContext.class);
-        SecurityContextHolder.setContext(context);
-        when(context.getAuthentication()).thenReturn(authentication);
-        when(authentication.getName()).thenReturn(usuario.getCorreo());
+	    @Test
+	    void testDepositoGet() {
+	        ModelAndView mav = depositarController.depositoGet(false);
+	        assertEquals("depositar.jsp", mav.getViewName());
+	        assertEquals(false, mav.getModel().get("realizada"));
+	    }
 
-      
-        when(usuarioService.getByUsername(any(String.class))).thenReturn(usuario);
+	    @Test
+	    void testDepositoPostSuccess() {
+	        Usuario usuario = new Usuario();
+	        usuario.setCorreo("juanpablo@mail.com");
+	        
+	        when(authentication.getName()).thenReturn("juanpablo@mail.com");
+	        when(usuarioService.getByUsername("juanpablo@mail.com")).thenReturn(usuario);
 
-        
-        doNothing().when(transaccionService).depositar(any(String.class), any(Integer.class));
+	        String viewName = depositarController.depositoPost(100, authentication, redirectAttributes);
 
-       
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/depositar")
-                .param("monto", "100")
-                .principal(authentication))
-                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/home"))
-                .andReturn();
+	        assertEquals("redirect:/home", viewName);
+	        verify(transaccionService).depositar("juanpablo@mail.com", 100);
+	        
+	        ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+	        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+	        ArgumentCaptor<TipoAlerta> typeCaptor = ArgumentCaptor.forClass(TipoAlerta.class);
+	        
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaTitulo"), titleCaptor.capture());
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaMensaje"), messageCaptor.capture());
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaTipo"), typeCaptor.capture());
+	        
+	        assertEquals("Éxito", titleCaptor.getValue());
+	        assertEquals("El depósito se realizó exitosamente.", messageCaptor.getValue());
+	        assertEquals(TipoAlerta.SUCCESS, typeCaptor.getValue());
+	    }
 
-     
-        RedirectAttributes redirectAttributes = (RedirectAttributes) result.getFlashMap().get("org.springframework.web.servlet.support.SessionFlashMapManager");
-        assertThat(redirectAttributes).isNotNull();
+	    @Test
+	    void testDepositoPostError() {
+	        Usuario usuario = new Usuario();
+	        usuario.setCorreo("juanpablo@mail.com");
 
-      
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaTitulo")).isEqualTo("Éxito");
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaMensaje")).isEqualTo("El depósito se realizó exitosamente.");
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaTipo")).isEqualTo(TipoAlerta.SUCCESS);
-    }
+	        when(authentication.getName()).thenReturn("juanpablo@mail.com");
+	        when(usuarioService.getByUsername("juanpablo@mail.com")).thenReturn(usuario);
+	        doThrow(new IllegalArgumentException("Error al depositar.")).when(transaccionService).depositar(anyString(), anyInt());
 
-    @Test
-    void testDepositoPostException() throws Exception {
-      
-        Usuario usuario = new Usuario();
-        usuario.setCorreo("juanpablo@mail.com");
+	        String viewName = depositarController.depositoPost(100, authentication, redirectAttributes);
 
-       
-        Authentication authentication = mock(Authentication.class);
-        SecurityContext context = mock(SecurityContext.class);
-        SecurityContextHolder.setContext(context);
-        when(context.getAuthentication()).thenReturn(authentication);
-        when(authentication.getName()).thenReturn(usuario.getCorreo());
-
-
-        when(usuarioService.getByUsername(any(String.class))).thenReturn(usuario);
-
-       
-        String errorMessage = "Error en la transacción";
-        doThrow(new IllegalArgumentException(errorMessage)).when(transaccionService).depositar(any(String.class), any(Integer.class));
-
-      
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/depositar")
-                .param("monto", "100")
-                .principal(authentication))
-                .andExpect(MockMvcResultMatchers.status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/depositar"))
-                .andReturn();
-
-       
-        RedirectAttributes redirectAttributes = (RedirectAttributes) result.getFlashMap().get("org.springframework.web.servlet.support.SessionFlashMapManager");
-        assertThat(redirectAttributes).isNotNull();
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaTitulo")).isEqualTo("Error");
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaMensaje")).isEqualTo(errorMessage);
-        assertThat(redirectAttributes.getFlashAttributes().get("alertaTipo")).isEqualTo(TipoAlerta.ERROR);
-    }
-}
+	        assertEquals("redirect:/depositar", viewName);
+	        
+	        ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+	        ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
+	        ArgumentCaptor<TipoAlerta> typeCaptor = ArgumentCaptor.forClass(TipoAlerta.class);
+	        
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaTitulo"), titleCaptor.capture());
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaMensaje"), messageCaptor.capture());
+	        verify(redirectAttributes, times(1)).addFlashAttribute(eq("alertaTipo"), typeCaptor.capture());
+	        
+	        assertEquals("Error", titleCaptor.getValue());
+	        assertEquals("Error al depositar.", messageCaptor.getValue());
+	        assertEquals(TipoAlerta.ERROR, typeCaptor.getValue());
+	    }
+	}

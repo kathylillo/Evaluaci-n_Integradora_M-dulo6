@@ -1,69 +1,77 @@
 package cl.evaluacion.AlkeWallet.controller;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import cl.evaluacion.AlkeWallet.model.Transaccion;
+import cl.evaluacion.AlkeWallet.service.TransaccionService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
+import org.springframework.ui.Model;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.core.Authentication;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
-import cl.evaluacion.AlkeWallet.model.Transaccion;
-import cl.evaluacion.AlkeWallet.service.TransaccionService;
-
-import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
-
-@SpringBootTest(classes = AlkeWalletApplication.class)
-public class TransaccionControllertTest {
-	
-	@Autowired
-    private WebApplicationContext webApplicationContext;
-
-    private MockMvc mockMvc;
-
-    @MockBean
+public class TransaccionControllerTest {
+	@Mock
     private TransaccionService transaccionService;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private Model model;
+
+    @InjectMocks
+    private TransaccionController transaccionController;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-
-       
-        when(transaccionService.getHistorial(anyString())).thenReturn(new ArrayList<>()); 
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testViewHistorialWithTransactions() throws Exception {
-        List<Transaccion> transacciones = new ArrayList<>();
-        transacciones.add(new Transaccion());
-        transacciones.add(new Transaccion());
+    void testViewHistorial() {
+        // Datos de prueba
+        String email = "juanpablo@mail.com";
+        List<Transaccion> mockHistorial = new ArrayList<>();
 
-       
-        when(transaccionService.getHistorial(anyString())).thenReturn(transacciones);
+        // Crear transacciones de prueba usando setters
+        Transaccion transaccion1 = new Transaccion();
+        transaccion1.setSender_User_Id(1);
+        transaccion1.setReceiver_User_Id(2);
+        transaccion1.setCurrency_Id(1);
+        transaccion1.setValor(100);
 
-        
-        mockMvc.perform(get("/historial").principal(mock(Authentication.class)))
-                .andExpect(status().isOk()) 
-                .andExpect(view().name("historial.jsp")) 
-                .andExpect(model().attributeExists("historial")) 
-                .andExpect(model().attribute("historial", transacciones)); 
-    }
+        Transaccion transaccion2 = new Transaccion();
+        transaccion2.setSender_User_Id(2);
+        transaccion2.setReceiver_User_Id(1);
+        transaccion2.setCurrency_Id(1);
+        transaccion2.setValor(150);
 
-    @Test
-    void testViewHistorialWithoutTransactions() throws Exception {
-        
-        mockMvc.perform(get("/historial").principal(mock(Authentication.class)))
-                .andExpect(status().isOk()) 
-                .andExpect(view().name("historial.jsp")) 
-                .andExpect(model().attributeExists("historial")) 
-                .andExpect(model().attribute("historial", new ArrayList<>())); 
+        mockHistorial.add(transaccion1);
+        mockHistorial.add(transaccion2);
+
+        // Configuración de los mocks
+        when(authentication.getName()).thenReturn(email);
+        when(transaccionService.getHistorial(email)).thenReturn(mockHistorial);
+
+        // Ejecución del método a probar
+        String viewName = transaccionController.viewHistorial(authentication, model);
+
+        // Verificación de la vista y el modelo
+        assertEquals("historial.jsp", viewName);
+
+        ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
+        verify(model).addAttribute(eq("historial"), argumentCaptor.capture());
+
+        List<Transaccion> historialInModel = argumentCaptor.getValue();
+        assertEquals(mockHistorial, historialInModel);
+        verify(transaccionService, times(1)).getHistorial(email);
     }
 }

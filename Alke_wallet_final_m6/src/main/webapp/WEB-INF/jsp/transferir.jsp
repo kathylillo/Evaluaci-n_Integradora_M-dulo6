@@ -51,45 +51,38 @@ label {
 </style>
 </head>
 <body>
-	<div class="container">
-		<div class="text-center">
-			<img
-				src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4riIGDL4H2FYaJIyqPSe_is4bTo0QeVNp4Q&s"
-				alt="Alke Wallet Logo"
-				style="border-radius: 10px; margin-bottom: 20px;">
-			<h1>Alke Wallet</h1>
-			<h2>Transferir</h2>
-			<form id="transferForm" action="/transferir" method="post">
-				<div class="mb-3">
-					<label for="receiverUserId" class="form-label">ID del
-						Destinatario:</label> <input type="number" id="receiverUserId"
-						name="receiverUserId" class="form-control">
-				</div>
-				<div class="mb-3">
-					<label for="valor" class="form-label">Monto:</label> <input
-						type="number" id="valor" name="valor" class="form-control"
-						required>
-				</div>
-				<button type="submit" class="btn btn-primary">Transferir</button>
-				<a href="<c:url value='/home'/>" class="btn btn-secondary">Volver
-					al Menú</a>
-			</form>
-		</div>
-	</div>
+<div class="container">
+    <div class="text-center">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4riIGDL4H2FYaJIyqPSe_is4bTo0QeVNp4Q&s" alt="Alke Wallet Logo" style="border-radius: 10px; margin-bottom: 20px;">
+        <h1>Alke Wallet</h1>
+        <h2>Transferir</h2>
+        <form id="transferForm" action="/transferir" method="post">
+            <div class="mb-3">
+                <label for="receiverUserId" class="form-label">ID del Destinatario:</label>
+                <input type="number" id="receiverUserId" name="receiverUserId" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label for="valor" class="form-label">Monto:</label>
+                <input type="number" id="valor" name="valor" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Transferir</button>
+            <a href="<c:url value='/home'/>" class="btn btn-secondary">Volver al Menú</a>
+        </form>
+    </div>
+</div>
 
-	<script>
-    const alertaTitulo = '<%=(request.getAttribute("alertaTitulo") != null) ? request.getAttribute("alertaTitulo") : ""%>';
-    const alertaMensaje = '<%=(request.getAttribute("alertaMensaje") != null) ? request.getAttribute("alertaMensaje") : ""%>';
-    const alertaTipo = '<%=(request.getAttribute("alertaTipo") != null) ? request.getAttribute("alertaTipo") : ""%>
-		';
+<script>
+    const alertaTitulo = '<%= (request.getAttribute("alertaTitulo") != null) ? request.getAttribute("alertaTitulo") : "" %>';
+    const alertaMensaje = '<%= (request.getAttribute("alertaMensaje") != null) ? request.getAttribute("alertaMensaje") : "" %>';
+    const alertaTipo = '<%= (request.getAttribute("alertaTipo") != null) ? request.getAttribute("alertaTipo") : "" %>';
 
-		if (alertaTitulo && alertaMensaje && alertaTipo) {
-			Swal.fire({
-				title : alertaTitulo,
-				text : alertaMensaje,
-				icon : alertaTipo.toLowerCase()
-			});
-		}
-	</script>
+    if (alertaTitulo && alertaMensaje && alertaTipo) {
+        Swal.fire({
+            title: alertaTitulo,
+            text: alertaMensaje,
+            icon: alertaTipo.toLowerCase()
+        });
+    }
+</script>
 </body>
 </html>

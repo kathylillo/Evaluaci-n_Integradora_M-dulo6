@@ -56,6 +56,35 @@ h2 {
 }
 </style>
 </head>
+<header>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand fs-2 text-dark">Alke Wallet</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active fs-5 text-dark" aria-current="page" href='/home'>Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fs-5 text-dark" href='/depositar'>Depositar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fs-5 text-dark" href='/retirar'>Retirar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fs-5 text-dark" href='/transferir'>Transferir a un tercero</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link fs-5 text-dark" href='/historial'>Ver Historial de Transacciones</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+</header>
 <body>
 	<div class="container">
 		<div style="text-align: center;">

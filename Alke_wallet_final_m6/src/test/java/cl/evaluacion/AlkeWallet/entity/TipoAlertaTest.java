@@ -5,19 +5,30 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
-import cl.evaluacion.AlkeWallet.entity.TipoAlerta;
+import org.junit.jupiter.api.DisplayName;
 
+import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
+/**
+ * Pruebas unitarias para la enumeración TipoAlerta.
+ */
 @SpringBootTest(classes = AlkeWalletApplication.class)
 public class TipoAlertaTest {
 
-	@Test
+	 /**
+     * Prueba para verificar los valores de la enumeración TipoAlerta.
+     */
+    @DisplayName("Prueba para valores de enumeración")
+    @Test
     public void testEnumValues() {
         assertEquals(TipoAlerta.ERROR, TipoAlerta.valueOf("ERROR"));
         assertEquals(TipoAlerta.SUCCESS, TipoAlerta.valueOf("SUCCESS"));
         assertEquals(TipoAlerta.WARNING, TipoAlerta.valueOf("WARNING"));
     }
 
+    /**
+     * Prueba para verificar el método toString de la enumeración TipoAlerta.
+     */
+    @DisplayName("Prueba para método toString")
     @Test
     public void testToString() {
         assertEquals("ERROR", TipoAlerta.ERROR.toString());

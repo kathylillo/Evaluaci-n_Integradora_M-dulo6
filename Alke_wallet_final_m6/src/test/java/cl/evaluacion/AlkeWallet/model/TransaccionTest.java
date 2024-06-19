@@ -3,25 +3,30 @@ package cl.evaluacion.AlkeWallet.model;
 import java.sql.Timestamp;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import cl.evaluacion.AlkeWallet.model.Transaccion;
-
+/**
+ * Pruebas unitarias para la clase Transaccion.
+ */
 @SpringBootTest
 public class TransaccionTest {
 	
-	@Test
+	/**
+     * Prueba del constructor y métodos getter y setter de Transaccion.
+     */
+    @DisplayName("Prueba del constructor y métodos getter y setter")
+    @Test
     public void testConstructorAndGettersSetters() {
-       
+        
         int transactionId = 1;
         int senderUserId = 100;
         int receiverUserId = 200;
         int valor = 500;
         Timestamp transactionDate = new Timestamp(System.currentTimeMillis());
         int currencyId = 1;
-
-       
+        
         Transaccion transaccion = new Transaccion();
         transaccion.setTransaction_Id(transactionId);
         transaccion.setSender_User_Id(senderUserId);
@@ -30,7 +35,7 @@ public class TransaccionTest {
         transaccion.setTransaction_Date(transactionDate);
         transaccion.setCurrency_Id(currencyId);
 
-        
+  
         Assertions.assertEquals(transactionId, transaccion.getTransaction_Id());
         Assertions.assertEquals(senderUserId, transaccion.getSender_User_Id());
         Assertions.assertEquals(receiverUserId, transaccion.getReceiver_User_Id());
@@ -39,6 +44,10 @@ public class TransaccionTest {
         Assertions.assertEquals(currencyId, transaccion.getCurrency_Id());
     }
 
+    /**
+     * Prueba del método toString() de Transaccion.
+     */
+    @DisplayName("Prueba del método toString")
     @Test
     public void testToString() {
        
@@ -50,7 +59,6 @@ public class TransaccionTest {
         transaccion.setTransaction_Date(new Timestamp(System.currentTimeMillis()));
         transaccion.setCurrency_Id(1);
 
-       
         String toStringResult = transaccion.toString();
 
         
@@ -61,7 +69,5 @@ public class TransaccionTest {
         Assertions.assertTrue(toStringResult.contains("valor=" + transaccion.getValor()));
         Assertions.assertTrue(toStringResult.contains("transaction_Date=" + transaccion.getTransaction_Date()));
         Assertions.assertTrue(toStringResult.contains("currency_Id=" + transaccion.getCurrency_Id()));
-    
-}
-
+    }
 }

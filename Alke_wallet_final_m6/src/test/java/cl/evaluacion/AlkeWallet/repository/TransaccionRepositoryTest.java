@@ -5,25 +5,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
 import cl.evaluacion.AlkeWallet.entity.TransaccionEntity;
-import cl.evaluacion.AlkeWallet.repository.TransaccionRepository;
+
 
 import static org.mockito.Mockito.*;
 
-
+/**
+ * Pruebas unitarias para el repositorio de Transacción.
+ */
 @SpringBootTest(classes = AlkeWalletApplication.class)
 public class TransaccionRepositoryTest {
 	
 	@MockBean
     private TransaccionRepository transaccionRepository;
 
+    /**
+     * Prueba para buscar transacciones por ID de remitente o destinatario.
+     */
+    @DisplayName("Buscar transacciones por ID de remitente o destinatario")
     @Test
     void testFindBySenderUserIdOrReceiverUserId() {
+       
         TransaccionEntity transaccion1 = new TransaccionEntity();
         transaccion1.setTransaccionId(1);
         transaccion1.setSenderUserId(1);

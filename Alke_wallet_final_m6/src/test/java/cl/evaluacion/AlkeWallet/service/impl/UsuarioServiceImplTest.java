@@ -1,16 +1,10 @@
 package cl.evaluacion.AlkeWallet.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import cl.evaluacion.AlkeWallet.entity.UsuarioEntity;
+import cl.evaluacion.AlkeWallet.model.Usuario;
+import cl.evaluacion.AlkeWallet.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -19,188 +13,263 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import cl.evaluacion.AlkeWallet.entity.UsuarioEntity;
-import cl.evaluacion.AlkeWallet.model.Usuario;
-import cl.evaluacion.AlkeWallet.repository.UsuarioRepository;
-import cl.evaluacion.AlkeWallet.service.impl.UsuarioServiceImpl;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-import org.springframework.boot.test.context.SpringBootTest;
-import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = AlkeWalletApplication.class)
+
+/**
+ * Pruebas unitarias para la clase UsuarioServiceImpl.
+ */
 public class UsuarioServiceImplTest {
 
-	 @Mock
-	    private UsuarioRepository usuarioRepository;
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
-	    @InjectMocks
-	    private UsuarioServiceImpl usuarioService;
+    @InjectMocks
+    private UsuarioServiceImpl usuarioService;
 
-	    @BeforeEach
-	    void setUp() {
-	        MockitoAnnotations.openMocks(this);
-	    }
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-	    @Test
-	    void testCrear() throws Exception {
-	        Usuario usuario = new Usuario();
-	        usuario.setNombre("Antonio Marin ");
-	        usuario.setCorreo("amarin@mail.com");
-	        usuario.setClave("98765"); 
-	        usuario.setFecha_de_creacion(null);
+    /**
+     * Prueba para la creación de un usuario.
+     */
+    @Test
+    @DisplayName("Test Crear Usuario")
+    void testCrear() {
+        Usuario usuario = new Usuario();
+        usuario.setNombre("Juan Pablo Reyes");
+        usuario.setCorreo("juanpablo@mail.com");
+        usuario.setClave("Profe12345");
+        usuario.setFecha_de_creacion(new java.sql.Timestamp(System.currentTimeMillis()));
 
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setUserId(1);
+        usuarioEntity.setNombre(usuario.getNombre());
+        usuarioEntity.setUsername(usuario.getCorreo());
+        usuarioEntity.setFechaDeCreacion(usuario.getFecha_de_creacion());
+        usuarioEntity.setPassword(new BCryptPasswordEncoder().encode(usuario.getClave()));
 
-	        when(usuarioRepository.save(any(UsuarioEntity.class))).thenReturn(usuarioEntity);
+        when(usuarioRepository.save(any(UsuarioEntity.class))).thenReturn(usuarioEntity);
 
-	        int userId = usuarioService.crear(usuario);
+        int userId = usuarioService.crear(usuario);
 
-	        assertThat(userId).isEqualTo(4);
-	        verify(usuarioRepository, times(1)).save(any(UsuarioEntity.class)); 
-	    }
+        assertEquals(1, userId);
+        verify(usuarioRepository, times(1)).save(any(UsuarioEntity.class));
+    }
 
-	    @Test
-	    void testCrearThrowsException() {
-	        Usuario usuario = new Usuario();
-	        usuario.setNombre("Antonio Marin ");
-	        usuario.setCorreo("amarin@mail.com");
-	        usuario.setClave("$2a$10$WBfrCS6KdAcVPq4pJCs0xO1iQuKeoALiJynKnNP8oL8rhdQtKF/3W"); //
-	        usuario.setFecha_de_creacion(null);
+    /**
+     * Prueba para la creación de un usuario que lanza una excepción.
+     */
+    @Test
+    @DisplayName("Test Crear Usuario Lanza Excepción")
+    void testCrearThrowsException() {
+        Usuario usuario = new Usuario();
+        usuario.setNombre("Juan Pablo Reyes");
+        usuario.setCorreo("juanpablo@mail.com");
+        usuario.setClave("Profe12345");
 
-	        when(usuarioRepository.save(any(UsuarioEntity.class))).thenThrow(new RuntimeException("Error"));
+        when(usuarioRepository.save(any(UsuarioEntity.class))).thenThrow(new RuntimeException("Error al guardar usuario"));
 
-	        assertThatThrownBy(() -> usuarioService.crear(usuario))
-	                .isInstanceOf(RuntimeException.class)
-	                .hasMessageContaining("Error");
-	    }
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            usuarioService.crear(usuario);
+        });
 
-	    @Test
-	    void testGetById() {
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
-	        usuarioEntity.setNombre("Antonio Marin ");
-	        usuarioEntity.setUsername("amarin@mail.com");
+        assertEquals("Error al guardar usuario", exception.getMessage());
+        verify(usuarioRepository, times(1)).save(any(UsuarioEntity.class));
+    }
 
-	        when(usuarioRepository.findById(4)).thenReturn(Optional.of(usuarioEntity));
+    /**
+     * Prueba para obtener un usuario por su ID.
+     */
+    @Test
+    @DisplayName("Test Obtener Usuario por ID")
+    void testGetById() {
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setUserId(1);
+        usuarioEntity.setNombre("Juan Pablo Reyes");
+        usuarioEntity.setUsername("juanpablo@mail.com");
 
-	        Usuario usuario = usuarioService.getById(4);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioEntity));
 
-	        assertThat(usuario).isNotNull();
-	        assertThat(usuario.getUser_Id()).isEqualTo(4);
-	        assertThat(usuario.getNombre()).isEqualTo("Antonio Marin ");
-	        assertThat(usuario.getCorreo()).isEqualTo("amarin@mail.com");
-	    }
+        Usuario usuario = usuarioService.getById(1);
 
-	    @Test
-	    void testGetByIdNotFound() {
-	        when(usuarioRepository.findById(15)).thenReturn(Optional.empty());
+        assertNotNull(usuario);
+        assertEquals(1, usuario.getUser_Id());
+        assertEquals("Juan Pablo Reyes", usuario.getNombre());
+        assertEquals("juanpablo@mail.com", usuario.getCorreo());
+        verify(usuarioRepository, times(1)).findById(1);
+    }
 
-	        Usuario usuario = usuarioService.getById(15);
+    /**
+     * Prueba para obtener un usuario por su ID cuando no se encuentra.
+     */
+    @Test
+    @DisplayName("Test Obtener Usuario por ID No Encontrado")
+    void testGetByIdNotFound() {
+        when(usuarioRepository.findById(1)).thenReturn(Optional.empty());
 
-	        assertThat(usuario).isNull();
-	    }
+        Usuario usuario = usuarioService.getById(1);
 
-	    @Test
-	    void testListado() throws Exception {
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
-	        usuarioEntity.setNombre("Antonio Marin ");
-	        usuarioEntity.setUsername("amarin@mail.com");
+        assertNull(usuario);
+        verify(usuarioRepository, times(1)).findById(1);
+    }
 
-	        List<UsuarioEntity> usuarioEntities = new ArrayList<>();
-	        usuarioEntities.add(usuarioEntity);
+    /**
+     * Prueba para obtener un listado de usuarios.
+     */
+    @Test
+    @DisplayName("Test Listado de Usuarios")
+    void testListado() {
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setUserId(1);
+        usuarioEntity.setNombre("Juan Pablo Reyes");
+        usuarioEntity.setUsername("juanpablo@mail.com");
 
-	        when(usuarioRepository.findAll()).thenReturn(usuarioEntities);
+        List<UsuarioEntity> usuarioEntities = new ArrayList<>();
+        usuarioEntities.add(usuarioEntity);
 
-	        List<Usuario> usuarios = usuarioService.listado();
+        when(usuarioRepository.findAll()).thenReturn(usuarioEntities);
 
-	        assertThat(usuarios).hasSize(1);
-	        assertThat(usuarios.get(0).getUser_Id()).isEqualTo(4);
-	        assertThat(usuarios.get(0).getNombre()).isEqualTo("Antonio Marin ");
-	        assertThat(usuarios.get(0).getCorreo()).isEqualTo("amarin@mail.com");
-	    }
+        List<Usuario> usuarios = usuarioService.listado();
 
-	    @Test
-	    void testListadoThrowsException() {
-	        when(usuarioRepository.findAll()).thenThrow(new RuntimeException("Error"));
+        assertNotNull(usuarios);
+        assertEquals(1, usuarios.size());
+        assertEquals(1, usuarios.get(0).getUser_Id());
+        verify(usuarioRepository, times(1)).findAll();
+    }
 
-	        assertThatThrownBy(() -> usuarioService.listado())
-	                .isInstanceOf(RuntimeException.class)
-	                .hasMessageContaining("Error");
-	    }
+    /**
+     * Prueba para obtener un listado de usuarios que lanza una excepción.
+     */
+    @Test
+    @DisplayName("Test Listado de Usuarios Lanza Excepción")
+    void testListadoThrowsException() {
+        when(usuarioRepository.findAll()).thenThrow(new RuntimeException("Error al obtener listado"));
 
-	    @Test
-	    void testLoadUserByUsername() {
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
-	        usuarioEntity.setUsername("amarin@mail.com");
-	        usuarioEntity.setPassword(new BCryptPasswordEncoder().encode("98765")); 
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            usuarioService.listado();
+        });
 
-	        when(usuarioRepository.findByUsername("amarin@mail.com ")).thenReturn(usuarioEntity);
+        assertEquals("Error al obtener listado", exception.getMessage());
+        verify(usuarioRepository, times(1)).findAll();
+    }
 
-	        UserDetails userDetails = usuarioService.loadUserByUsername("amarin@mail.com ");
+    /**
+     * Prueba para cargar un usuario por su nombre de usuario.
+     */
+    @Test
+    @DisplayName("Test Cargar Usuario por Nombre de Usuario")
+    void testLoadUserByUsername() {
+        String username = "juanpablo@mail.com";
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setUsername(username);
+        usuarioEntity.setPassword("Profe12345");
 
-	        assertThat(userDetails).isNotNull();
-	        assertThat(userDetails.getUsername()).isEqualTo("amarin@mail.com ");
-	        assertThat(new BCryptPasswordEncoder().matches("98765", userDetails.getPassword())).isTrue();
-	    }
+        when(usuarioRepository.findByUsername(username)).thenReturn(usuarioEntity);
 
-	    @Test
-	    void testLoadUserByUsernameNotFound() {
-	        when(usuarioRepository.findByUsername("marin@mail.com")).thenReturn(null);
+        UserDetails userDetails = usuarioService.loadUserByUsername(username);
 
-	        assertThatThrownBy(() -> usuarioService.loadUserByUsername("marin@mail.com"))
-	                .isInstanceOf(UsernameNotFoundException.class)
-	                .hasMessageContaining("Usuario no encontrado con el correo electrónico: marin@mail.com");
-	    }
+        assertNotNull(userDetails);
+        assertEquals(username, userDetails.getUsername());
+        verify(usuarioRepository, times(1)).findByUsername(username);
+    }
 
-	    @Test
-	    void testGetByUsername() {
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
-	        usuarioEntity.setNombre("Antonio Marin ");
-	        usuarioEntity.setUsername("amarin@mail.com");
+    /**
+     * Prueba para cargar un usuario por su nombre de usuario cuando no se encuentra.
+     */
+    @Test
+    @DisplayName("Test Cargar Usuario por Nombre de Usuario No Encontrado")
+    void testLoadUserByUsernameNotFound() {
+        String username = "pepito@mail.com";
+        when(usuarioRepository.findByUsername(username)).thenReturn(null);
 
-	        when(usuarioRepository.findByUsername("amarin@mail.com")).thenReturn(usuarioEntity);
+        Exception exception = assertThrows(UsernameNotFoundException.class, () -> {
+            usuarioService.loadUserByUsername(username);
+        });
 
-	        Usuario usuario = usuarioService.getByUsername("amarin@mail.com");
+        assertEquals("Error al cargar usuario por nombre de usuario", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(username);
+    }
 
-	        assertThat(usuario).isNotNull();
-	        assertThat(usuario.getUser_Id()).isEqualTo(4);
-	        assertThat(usuario.getNombre()).isEqualTo("Antonio Marin");
-	        assertThat(usuario.getCorreo()).isEqualTo("amarin@mail.com");
-	    }
+    /**
+     * Prueba para obtener un usuario por su nombre de usuario.
+     */
+    @Test
+    @DisplayName("Test Obtener Usuario por Nombre de Usuario")
+    void testGetByUsername() {
+        String correo = "juanpablo@mail.com";
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setUserId(1);
+        usuarioEntity.setNombre("Juan Pablo Reyes");
+        usuarioEntity.setUsername(correo);
+        usuarioEntity.setSaldo(1000);
 
-	    @Test
-	    void testGetByUsernameNotFound() {
-	        when(usuarioRepository.findByUsername("amarin@mail.com")).thenReturn(null);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuarioEntity);
 
-	        Usuario usuario = usuarioService.getByUsername("amarin@mail.com");
+        Usuario usuario = usuarioService.getByUsername(correo);
 
-	        assertThat(usuario).isNull();
-	    }
+        assertNotNull(usuario);
+        assertEquals(1, usuario.getUser_Id());
+        assertEquals("Juan Pablo Reyes", usuario.getNombre());
+        assertEquals(correo, usuario.getCorreo());
+        assertEquals(1000, usuario.getSaldo());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
 
-	    @Test
-	    void testObtenerSaldoUsuario() {
-	        UsuarioEntity usuarioEntity = new UsuarioEntity();
-	        usuarioEntity.setUserId(4);
-	        usuarioEntity.setUsername("amarin@mail.com");
-	        usuarioEntity.setSaldo(1000);
+    /**
+     * Prueba para obtener un usuario por su nombre de usuario cuando no se encuentra.
+     */
+    @Test
+    @DisplayName("Test Obtener Usuario por Nombre de Usuario No Encontrado")
+    void testGetByUsernameNotFound() {
+        String correo = "pepito@mail.com";
+        when(usuarioRepository.findByUsername(correo)).thenReturn(null);
 
-	        when(usuarioRepository.findByUsername("amarin@mail.com")).thenReturn(usuarioEntity);
+        Usuario usuario = usuarioService.getByUsername(correo);
 
-	        int saldo = usuarioService.obtenerSaldoUsuario("amarin@mail.com");
+        assertNull(usuario);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
 
-	        assertThat(saldo).isEqualTo(1000);
-	    }
+    /**
+     * Prueba para obtener el saldo de un usuario por su nombre de usuario.
+     */
+    @Test
+    @DisplayName("Test Obtener Saldo de Usuario")
+    void testObtenerSaldoUsuario() {
+        String correo = "juanpablo@mail.com";
+        UsuarioEntity usuarioEntity = new UsuarioEntity();
+        usuarioEntity.setSaldo(1000);
 
-	    @Test
-	    void testObtenerSaldoUsuarioNotFound() {
-	        when(usuarioRepository.findByUsername("marin@mail.com")).thenReturn(null);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuarioEntity);
 
-	        assertThatThrownBy(() -> usuarioService.obtenerSaldoUsuario("marin@mail.com"))
-	                .isInstanceOf(IllegalArgumentException.class)
-	                .hasMessageContaining("El usuario no existe");
-	    }
-	}
+        int saldo = usuarioService.obtenerSaldoUsuario(correo);
+
+        assertEquals(1000, saldo);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
+
+    /**
+     * Prueba para obtener el saldo de un usuario por su nombre de usuario cuando no se encuentra.
+     */
+    @Test
+    @DisplayName("Test Obtener Saldo de Usuario No Encontrado")
+    void testObtenerSaldoUsuarioNotFound() {
+        String correo = "pepito@mail.com";
+        when(usuarioRepository.findByUsername(correo)).thenReturn(null);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            usuarioService.obtenerSaldoUsuario(correo);
+        });
+
+        assertEquals("El usuario no existe", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
+}

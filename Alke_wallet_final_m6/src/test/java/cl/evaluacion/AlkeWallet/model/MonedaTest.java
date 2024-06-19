@@ -1,14 +1,20 @@
 package cl.evaluacion.AlkeWallet.model;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import cl.evaluacion.AlkeWallet.model.Moneda;
-
+/**
+ * Pruebas unitarias para la clase Moneda.
+ */
 @SpringBootTest
 public class MonedaTest {
 
+	/**
+     * Prueba del constructor y métodos getter y setter de Moneda.
+     */
+    @DisplayName("Prueba del constructor y métodos getter y setter")
 	@Test
     public void testConstructorAndGettersSetters() {
     

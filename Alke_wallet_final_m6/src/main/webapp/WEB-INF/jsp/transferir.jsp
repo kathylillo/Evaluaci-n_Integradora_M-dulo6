@@ -112,5 +112,7 @@ label {
         });
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-9aSs8sSOwdcCMYXZ8ZSTvj2dN7fjG0Vtx+yV+XSN46CDwE6VtBoW+9/5E7I2O+Ow" crossorigin="anonymous"></script>
+
 </body>
 </html>

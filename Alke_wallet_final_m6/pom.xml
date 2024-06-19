@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>cl.evaluacion</groupId>
-	<artifactId>AlkeWallet_final_m6</artifactId>
+	<artifactId>Alke_Wallet_final_m6</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>AlkeWallet_final_m6</name>
+	<name>Alke_Wallet_final_m6</name>
 	<description>Evaluación integradora Módulo 6</description>
 	<properties>
 		<java.version>21</java.version>

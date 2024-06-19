@@ -3,6 +3,7 @@ package cl.evaluacion.AlkeWallet.controller;
 import cl.evaluacion.AlkeWallet.model.Usuario;
 import cl.evaluacion.AlkeWallet.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +24,9 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
+/**
+ * Pruebas unitarias para HomeController.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 public class HomeControllerTest {
@@ -36,11 +39,20 @@ public class HomeControllerTest {
 
     private MockMvc mockMvc;
 
+    /**
+     * Configuración inicial antes de cada prueba.
+     */
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
+    /**
+     * Prueba para verificar la carga exitosa de la página de inicio ("/home").
+     *
+     * @throws Exception si hay un error durante la ejecución de la prueba.
+     */
+    @DisplayName("Prueba de carga de página de inicio exitosa")
     @Test
     void testHome() throws Exception {
         Usuario usuario = new Usuario();
@@ -75,6 +87,13 @@ public class HomeControllerTest {
         assert usuarioModel.getNombre().equals("Juan Pablo Reyes");
         assert saldo.equals(1000);
     }
+
+    /**
+     * Prueba para verificar que los atributos flash se pasan correctamente al modelo.
+     *
+     * @throws Exception si hay un error durante la ejecución de la prueba.
+     */
+    @DisplayName("Prueba de atributos flash en la página de inicio")
     @Test
     void testHomeWithFlashAttributes() throws Exception {
         Map<String, Object> flashMap = new HashMap<>();

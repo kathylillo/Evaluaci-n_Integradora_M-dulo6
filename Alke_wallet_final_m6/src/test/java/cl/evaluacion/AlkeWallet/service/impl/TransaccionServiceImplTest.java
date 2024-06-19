@@ -1,176 +1,224 @@
 package cl.evaluacion.AlkeWallet.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
-
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import cl.evaluacion.AlkeWallet.entity.TransaccionEntity;
 import cl.evaluacion.AlkeWallet.entity.UsuarioEntity;
 import cl.evaluacion.AlkeWallet.model.Transaccion;
 import cl.evaluacion.AlkeWallet.repository.TransaccionRepository;
 import cl.evaluacion.AlkeWallet.repository.UsuarioRepository;
-import cl.evaluacion.AlkeWallet.service.impl.TransaccionServiceImpl;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import cl.evaluacion.AlkeWallet.AlkeWalletApplication;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.List;
 
-@SpringBootTest(classes = AlkeWalletApplication.class)
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Pruebas unitarias para la clase TransaccionServiceImpl.
+ */
 public class TransaccionServiceImplTest {
 
-	 @Mock
-	    private TransaccionRepository transaccionRepository;
+    @Mock
+    private TransaccionRepository transaccionRepository;
 
-	    @Mock
-	    private UsuarioRepository usuarioRepository;
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
-	    @InjectMocks
-	    private TransaccionServiceImpl transaccionService;
+    @InjectMocks
+    private TransaccionServiceImpl transaccionService;
 
-	    @BeforeEach
-	    void setUp() {
-	        MockitoAnnotations.openMocks(this);
-	    }
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
-	    @Test
-	    void testDepositar() {
-	        UsuarioEntity usuario = new UsuarioEntity();
-	        usuario.setUserId(10);
-	        usuario.setUsername("irhein@mail.com");
-	        usuario.setSaldo(1000);
+    /**
+     * Prueba para obtener el historial de transacciones de un usuario.
+     */
+    @Test
+    @DisplayName("Test Obtener Historial de Transacciones")
+    void testGetHistorial() {
+        String correo = "juanpablo@mail.com";
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setUserId(1);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuario);
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(usuario);
+        TransaccionEntity transaccionEntity = new TransaccionEntity();
+        transaccionEntity.setSenderUserId(1);
+        transaccionEntity.setReceiverUserId(2);
+        transaccionEntity.setValor(100);
+        transaccionEntity.setTransactionDate(new Timestamp(System.currentTimeMillis()));
+        transaccionEntity.setCurrencyId(1);
 
-	        doNothing().when(usuarioRepository).updateSaldo(10, 1000);
+        when(transaccionRepository.findBySenderUserIdOrReceiverUserId(1, 1))
+            .thenReturn(Arrays.asList(transaccionEntity));
 
-	        transaccionService.depositar("irhein@mail.com", 1000);
+        List<Transaccion> historial = transaccionService.getHistorial(correo);
 
-	        verify(usuarioRepository).updateSaldo(10, 1000);
-	    }
+        assertNotNull(historial);
+        assertEquals(1, historial.size());
+        assertEquals(100, historial.get(0).getValor());
 
-	    @Test
-	    void testDepositarUsuarioNoExistente() {
-	        when(usuarioRepository.findByUsername("test@mail.com")).thenReturn(null);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+        verify(transaccionRepository, times(1)).findBySenderUserIdOrReceiverUserId(1, 1);
+    }
 
-	        assertThatThrownBy(() -> transaccionService.depositar("test@mail.com", 1000))
-	                .isInstanceOf(IllegalArgumentException.class)
-	                .hasMessageContaining("El usuario no existe o el monto a depositar debe ser mayor a cero.");
-	    }
+    /**
+     * Prueba para obtener el historial de transacciones cuando el usuario no se encuentra.
+     */
+    @Test
+    @DisplayName("Test Obtener Historial de Transacciones - Usuario No Encontrado")
+    void testGetHistorialUserNotFound() {
+        String correo = "pepito@mail.com";
+        when(usuarioRepository.findByUsername(correo)).thenReturn(null);
 
-	    @Test
-	    void testRetirar() {
-	        UsuarioEntity usuario = new UsuarioEntity();
-	        usuario.setUserId(10);
-	        usuario.setUsername("irhein@mail.com");
-	        usuario.setSaldo(1000);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            transaccionService.getHistorial(correo);
+        });
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(usuario);
+        assertEquals("No se encontró ningún usuario con el correo electrónico proporcionado.", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
 
-	        doNothing().when(usuarioRepository).updateSaldo(10, -500);
+    /**
+     * Prueba para depositar saldo en la cuenta de un usuario.
+     */
+    @Test
+    @DisplayName("Test Depositar Saldo")
+    void testDepositar() {
+        String correo = "juanpablo@mail.com";
+        int monto = 1000;
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setUserId(1);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuario);
 
-	        transaccionService.retirar("irhein@mail.com", 500);
+        doNothing().when(usuarioRepository).updateSaldo(1, monto);
 
-	        verify(usuarioRepository).updateSaldo(10, -500);
-	    }
+        transaccionService.depositar(correo, monto);
 
-	    @Test
-	    void testRetirarSaldoInsuficiente() {
-	        UsuarioEntity usuario = new UsuarioEntity();
-	        usuario.setUserId(10);
-	        usuario.setUsername("irhein@mail.com");
-	        usuario.setSaldo(100);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+        verify(usuarioRepository, times(1)).updateSaldo(1, monto);
+    }
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(usuario);
+    /**
+     * Prueba para depositar saldo cuando el usuario no se encuentra o el monto es inválido.
+     */
+    @Test
+    @DisplayName("Test Depositar Saldo - Usuario No Encontrado o Monto Inválido")
+    void testDepositarUserNotFoundOrInvalidAmount() {
+        String correo = "pepito@mail.com";
+        int monto = -1000;
+        when(usuarioRepository.findByUsername(correo)).thenReturn(null);
 
-	        assertThatThrownBy(() -> transaccionService.retirar("irhein@mail.com", 500))
-	                .isInstanceOf(IllegalArgumentException.class)
-	                .hasMessageContaining("El usuario no existe, el monto a retirar debe ser mayor a cero o el saldo insuficiente.");
-	    }
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            transaccionService.depositar(correo, monto);
+        });
 
-	    @Test
-	    void testTransferir() {
-	        UsuarioEntity remitente = new UsuarioEntity();
-	        remitente.setUserId(10);
-	        remitente.setUsername("irhein@mail.com");
-	        remitente.setSaldo(1000);
+        assertEquals("El usuario no existe o el monto a depositar debe ser mayor a cero.", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
 
-	        UsuarioEntity destinatario = new UsuarioEntity();
-	        destinatario.setUserId(8);
-	        destinatario.setUsername("cmolina@mail.com");
-	        destinatario.setSaldo(500);
+    /**
+     * Prueba para retirar saldo de la cuenta de un usuario.
+     */
+    @Test
+    @DisplayName("Test Retirar Saldo")
+    void testRetirar() {
+        String correo = "juanpablo@mail.com";
+        int monto = 500;
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setUserId(1);
+        usuario.setSaldo(1000);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuario);
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(remitente);
+        doNothing().when(usuarioRepository).updateSaldo(1, -monto);
 
-	        doNothing().when(usuarioRepository).updateSaldo(1, -300);
-	        doNothing().when(usuarioRepository).updateSaldo(2, 300);
+        transaccionService.retirar(correo, monto);
 
-	        transaccionService.transferir("irhein@mail.com", 2, 300);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+        verify(usuarioRepository, times(1)).updateSaldo(1, -monto);
+    }
 
-	        verify(usuarioRepository).updateSaldo(1, -300);
-	        verify(usuarioRepository).updateSaldo(2, 300);
-	        verify(transaccionRepository).save(any(TransaccionEntity.class));
-	    }
+    /**
+     * Prueba para retirar saldo cuando el usuario no se encuentra, el monto es inválido o no hay suficientes fondos.
+     */
+    @Test
+    @DisplayName("Test Retirar Saldo - Usuario No Encontrado, Monto Inválido o Saldo Insuficiente")
+    void testRetirarUserNotFoundOrInvalidAmountOrInsufficientFunds() {
+        String correo = "juanpablo@mail.com";
+        int monto = 1500;
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setUserId(1);
+        usuario.setSaldo(1000);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(usuario);
 
-	    @Test
-	    void testTransferirSaldoInsuficiente() {
-	        UsuarioEntity remitente = new UsuarioEntity();
-	        remitente.setUserId(10);
-	        remitente.setUsername("irhein@mail.com");
-	        remitente.setSaldo(100);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            transaccionService.retirar(correo, monto);
+        });
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(remitente);
+        assertEquals("El usuario no existe, el monto a retirar debe ser mayor a cero o el saldo insuficiente.", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
 
-	        assertThatThrownBy(() -> transaccionService.transferir("irhein@mail.com", 2, 300))
-	                .isInstanceOf(IllegalArgumentException.class)
-	                .hasMessageContaining("El usuario remitente no tiene suficientes fondos para completar la transferencia.");
-	    }
+    /**
+     * Prueba para transferir saldo entre dos usuarios.
+     */
+    @Test
+    @DisplayName("Test Transferir Saldo")
+    void testTransferir() {
+        String correo = "juanpablo@mail.com";
+        int receiverUserId = 2;
+        int valor = 300;
+        UsuarioEntity remitente = new UsuarioEntity();
+        remitente.setUserId(1);
+        remitente.setSaldo(1000);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(remitente);
 
-	    @Test
-	    void testGetHistorial() {
-	        UsuarioEntity usuario = new UsuarioEntity();
-	        usuario.setUserId(10);
-	        usuario.setUsername("irhein@mail.com");
+        TransaccionEntity transaccionEntity = new TransaccionEntity();
+        transaccionEntity.setSenderUserId(1);
+        transaccionEntity.setReceiverUserId(receiverUserId);
+        transaccionEntity.setValor(valor);
+        transaccionEntity.setTransactionDate(new Timestamp(System.currentTimeMillis()));
+        transaccionEntity.setCurrencyId(1);
 
-	        when(usuarioRepository.findByUsername("irhein@mail.com")).thenReturn(usuario);
+        when(transaccionRepository.save(any(TransaccionEntity.class))).thenReturn(transaccionEntity);
+        doNothing().when(usuarioRepository).updateSaldo(1, -valor);
+        doNothing().when(usuarioRepository).updateSaldo(receiverUserId, valor);
 
-	        TransaccionEntity transaccion1 = new TransaccionEntity();
-	        transaccion1.setTransaccionId(10);
-	        transaccion1.setSenderUserId(10);
-	        transaccion1.setReceiverUserId(8);
-	        transaccion1.setValor(1000);
+        transaccionService.transferir(correo, receiverUserId, valor);
 
-	        TransaccionEntity transaccion2 = new TransaccionEntity();
-	        transaccion2.setTransaccionId(11);
-	        transaccion2.setSenderUserId(8);
-	        transaccion2.setReceiverUserId(10);
-	        transaccion2.setValor(500);
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+        verify(transaccionRepository, times(1)).save(any(TransaccionEntity.class));
+        verify(usuarioRepository, times(1)).updateSaldo(1, -valor);
+        verify(usuarioRepository, times(1)).updateSaldo(receiverUserId, valor);
+    }
 
-	        List<TransaccionEntity> transacciones = Arrays.asList(transaccion1, transaccion2);
+    /**
+     * Prueba para transferir saldo cuando el usuario no se encuentra o el monto es inválido.
+     */
+    @Test
+    @DisplayName("Test Transferir Saldo - Usuario No Encontrado o Monto Inválido")
+    void testTransferirUserNotFoundOrInvalidAmountOrInsufficientFunds() {
+        String correo = "juanpablo@mail.com";
+        int receiverUserId = 2;
+        int valor = 1500;
+        UsuarioEntity remitente = new UsuarioEntity();
+        remitente.setUserId(1);
+        remitente.setSaldo(1000);
+        when(usuarioRepository.findByUsername(correo)).thenReturn(remitente);
 
-	        when(transaccionRepository.findBySenderUserIdOrReceiverUserId(10, 10)).thenReturn(transacciones);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            transaccionService.transferir(correo, receiverUserId, valor);
+        });
 
-	        List<Transaccion> result = transaccionService.getHistorial("irhein@mail.com");
-
-	        assertThat(result).hasSize(2);
-	        assertThat(result.get(0).getTransaction_Id()).isEqualTo(1);
-	        assertThat(result.get(1).getTransaction_Id()).isEqualTo(2);
-	    }
-
-	    @Test
-	    void testGetHistorialUsuarioNoExistente() {
-	        when(usuarioRepository.findByUsername("test@mail.com")).thenReturn(null);
-
-	        assertThatThrownBy(() -> transaccionService.getHistorial("test@mail.com"))
-	                .isInstanceOf(IllegalArgumentException.class)
-	                .hasMessageContaining("No se encontró ningún usuario con el correo electrónico proporcionado.");
-	    }
-	}
+        assertEquals("El usuario remitente no tiene suficientes fondos para completar la transferencia.", exception.getMessage());
+        verify(usuarioRepository, times(1)).findByUsername(correo);
+    }
+}

@@ -58,7 +58,13 @@ public class RetirarController {
 	@PostMapping("/retirar")
 	public String retirarPost(@RequestParam("monto") int monto, Authentication authentication,
 			RedirectAttributes redirectAttributes) {
-
+		 
+        if (monto <= 0) {
+            redirectAttributes.addFlashAttribute("alertaTitulo", "Error");
+            redirectAttributes.addFlashAttribute("alertaMensaje", "El monto no puede ser menor o igual a cero. Debe ingresar un monto válido.");
+            redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.ERROR);
+            return "redirect:/retirar";
+        }
 		Usuario usuario = usuarioService.getByUsername(authentication.getName());
 		String correo = usuario.getCorreo();
 		try {

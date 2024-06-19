@@ -54,24 +54,31 @@ public class DepositarController {
      * @param redirectAttributes Atributos para redireccionar con mensajes de alerta.
      * @return Redirección a la página correspondiente tras el intento de depósito.
      */
-	@PostMapping("/depositar")
-	public String depositoPost(@RequestParam("monto") int monto, Authentication authentication,
-			RedirectAttributes redirectAttributes) {
+	 @PostMapping("/depositar")
+	    public String depositoPost(@RequestParam("monto") int monto, Authentication authentication,
+	            RedirectAttributes redirectAttributes) {
+		 
+	        if (monto <= 0) {
+	            redirectAttributes.addFlashAttribute("alertaTitulo", "Error");
+	            redirectAttributes.addFlashAttribute("alertaMensaje", "El monto no puede ser menor o igual a cero. Debe ingresar un monto válido.");
+	            redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.ERROR);
+	            return "redirect:/depositar";
+	        }
 
-		Usuario usuario = usuarioService.getByUsername(authentication.getName());
-		String correo = usuario.getCorreo();
-		try {
-			transaccionService.depositar(correo, monto);
-			redirectAttributes.addFlashAttribute("alertaTitulo", "Éxito");
-			redirectAttributes.addFlashAttribute("alertaMensaje", "El depósito se realizó exitosamente.");
-			redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.SUCCESS);
-		} catch (IllegalArgumentException e) {
-			redirectAttributes.addFlashAttribute("alertaTitulo", "Error");
-			redirectAttributes.addFlashAttribute("alertaMensaje", e.getMessage());
-			redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.ERROR);
-			return "redirect:/depositar";
-		}
+	        Usuario usuario = usuarioService.getByUsername(authentication.getName());
+	        String correo = usuario.getCorreo();
+	        try {
+	            transaccionService.depositar(correo, monto);
+	            redirectAttributes.addFlashAttribute("alertaTitulo", "Éxito");
+	            redirectAttributes.addFlashAttribute("alertaMensaje", "El depósito se realizó exitosamente.");
+	            redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.SUCCESS);
+	        } catch (IllegalArgumentException e) {
+	            redirectAttributes.addFlashAttribute("alertaTitulo", "Error");
+	            redirectAttributes.addFlashAttribute("alertaMensaje", e.getMessage());
+	            redirectAttributes.addFlashAttribute("alertaTipo", TipoAlerta.ERROR);
+	            return "redirect:/depositar";
+	        }
 
-		return "redirect:/home";
+	        return "redirect:/home";
+	    }
 	}
-}

@@ -98,20 +98,18 @@ label {
 			</form>
 		</div>
 		<script>
-        
-        const alertaTitulo = '<%=(request.getAttribute("alertaTitulo") != null) ? request.getAttribute("alertaTitulo") : ""%>';
-        const alertaMensaje = '<%=(request.getAttribute("alertaMensaje") != null) ? request.getAttribute("alertaMensaje") : ""%>';
-        const alertaTipo = '<%=(request.getAttribute("alertaTipo") != null) ? request.getAttribute("alertaTipo") : ""%>
-			';
+        const alertaTitulo = '<c:out value="${alertaTitulo}" default=""/>';
+        const alertaMensaje = '<c:out value="${alertaMensaje}" default=""/>';
+        const alertaTipo = '<c:out value="${alertaTipo}" default=""/>';
 
-			if (alertaTitulo && alertaMensaje && alertaTipo) {
-				Swal.fire({
-					title : alertaTitulo,
-					text : alertaMensaje,
-					icon : alertaTipo.toLowerCase()
-				});
-			}
-		</script>
+        if (alertaTitulo && alertaMensaje && alertaTipo) {
+            Swal.fire({
+                title: alertaTitulo,
+                text: alertaMensaje,
+                icon: alertaTipo.toLowerCase()
+            });
+        }
+    </script>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-9aSs8sSOwdcCMYXZ8ZSTvj2dN7fjG0Vtx+yV+XSN46CDwE6VtBoW+9/5E7I2O+Ow" crossorigin="anonymous"></script>
 	
